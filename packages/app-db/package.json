@@ -1,0 +1,22 @@
+{
+    "name": "app-db",
+    "version": "1.0.0",
+    "main": "src/index.ts",
+    "scripts": {
+        "build": "yarn esbuild",
+        "start": "node dist/index.js"
+    },
+    "dependencies": {
+        "@nestjs/typeorm": "^10.0.2",
+        "dotenv": "^10.0.0",
+        "pg": "^8.13.0",
+        "reflect-metadata": "^0.2.2",
+        "typeorm": "^0.3.20"
+    },
+    "devDependencies": {
+        "@types/node": "^22.7.0",
+        "esbuild": "^0.24.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.6.2"
+    }
+}
