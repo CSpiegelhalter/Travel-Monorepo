@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    "importHelpers": true,
+    "composite": true,
+    "target": "ES2018",
+    "module": "CommonJS",
+    "lib": ["es2021", "DOM"],
+  }
+}

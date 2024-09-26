@@ -1,22 +1,27 @@
 {
-    "name": "app-db",
-    "version": "1.0.0",
-    "main": "src/index.ts",
-    "scripts": {
-        "build": "yarn esbuild",
-        "start": "node dist/index.js"
-    },
-    "dependencies": {
-        "@nestjs/typeorm": "^10.0.2",
-        "dotenv": "^10.0.0",
-        "pg": "^8.13.0",
-        "reflect-metadata": "^0.2.2",
-        "typeorm": "^0.3.20"
-    },
-    "devDependencies": {
-        "@types/node": "^22.7.0",
-        "esbuild": "^0.24.0",
-        "ts-node": "^10.9.2",
-        "typescript": "^5.6.2"
-    }
+  "name": "app-db",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rm -rf dist && yarn esbuild src/index.ts --bundle --minify --platform=node --outfile=dist/index.js",
+    "build:dev": "rm -rf dist && yarn tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.4",
+    "@nestjs/core": "^10.4.4",
+    "@nestjs/typeorm": "^10.0.2",
+    "dotenv": "^10.0.0",
+    "pg": "^8.13.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.1",
+    "esbuild": "^0.24.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
+  },
+  "packageManager": "yarn@4.5.0"
 }

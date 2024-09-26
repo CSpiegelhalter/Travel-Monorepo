@@ -1,14 +1,39 @@
-version: '3'
+version: '3.8'
 services:
-  db:
-    image: postgis/postgis:14-3.2  # This uses a PostGIS-enabled image
+  app-db:
+    image: postgres:14
     environment:
-      POSTGRES_USER: user
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
+      POSTGRES_DB: travel
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
+    network_mode: host
+
+  travel-server:
+    build:
+      context: .
+      dockerfile: packages/travel-server/Dockerfile
+      network: host
+      args:
+        - ENV_NAME=local
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      DB_DATABASE: travel
+    ports:
+      - '3000:3000'
+    depends_on:
+      - app-db
+    networks:
+      - app-network
+
 volumes:
-  pgdata:
+  db-data:
+
+networks:
+  app-network:

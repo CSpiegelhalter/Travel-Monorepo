@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.packages.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "references": [
+    {
+      "path": "../app-db"
+    }
+  ],
+  "exclude": ["node_modules", "dist"]
+}
