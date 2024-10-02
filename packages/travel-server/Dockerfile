@@ -24,28 +24,6 @@ COPY . .
 # Run the build for travel-server (this generates the dist folder)
 RUN yarn workspace travel-server build:dev
 
-# Stage 2: Create the final image with only the necessary build files
-# FROM node:20
-
-# WORKDIR /app
-
-# # Enable Corepack in the final image
-# RUN corepack enable
-
-# # Install the correct version of Yarn in the final image
-# RUN corepack prepare yarn@4.5.0 --activate
-
-# # Copy only the built dist folder and the necessary files for the server
-# COPY --from=builder /app/packages/travel-server/dist /app/dist
-# COPY --from=builder /app/packages/travel-server/package.json /app/package.json
-# COPY --from=builder /app/yarn.lock /app/yarn.lock
-# COPY --from=builder /app/.yarn /app/.yarn
-# COPY --from=builder /app/.yarnrc.yml /app/.yarnrc.yml
-
-
-# Install only production dependencies
-# RUN yarn workspaces focus --production
-# RUN yarn install
 # Expose port 8080 for your app
 EXPOSE 8080
 

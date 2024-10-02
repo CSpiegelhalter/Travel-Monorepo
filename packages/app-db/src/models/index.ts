@@ -1,4 +1,2 @@
-import { User } from "./User";
-import { Place } from "./Place";
-
-export const entities = [User, Place];
+export * from "./Place";
+export * from "./User";

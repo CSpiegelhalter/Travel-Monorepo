@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Point, Column } from "typeorm";
 
 @Entity()
 export class Place {
@@ -11,16 +11,16 @@ export class Place {
   @Column()
   address: string;
 
-  @Column()
+  @Column({ nullable: true })
   city: string;
 
-  @Column()
+  @Column({ nullable: true })
   state: string;
 
   @Column()
   country: string;
 
-  @Column()
+  @Column({ nullable: true })
   website: string;
 
   @Column()
@@ -35,10 +35,10 @@ export class Place {
   @Column()
   images: string;
 
-  @Column("float")
+  @Column("float", { nullable: true })
   rating: number;
 
-  @Column()
+  @Column({ nullable: true })
   reviews: number;
 
   @Column("float")
@@ -47,11 +47,11 @@ export class Place {
   @Column("float")
   longitude: number;
 
-  // Use PostGIS geometry column for geospatial queries
+  // Use PostGIS geography column for geospatial queries
   @Column({
-    type: "geometry",
+    type: "geography",
     spatialFeatureType: "Point", // Defines this as a Point geometry
     srid: 4326, // SRID for WGS84, the standard for GPS coordinates
   })
-  location: string;
+  location: Point;
 }
