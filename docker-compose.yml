@@ -1,7 +1,6 @@
-version: '3.8'
 services:
-  app-db:
-    image: postgres:14
+  db:
+    image: postgis/postgis:14-3.2
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -10,15 +9,33 @@ services:
       - '5432:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
-    network_mode: host
+    networks:
+      - app-network
+
+  # New app-db service (shared models and migrations)
+  app-db:
+    build:
+      context: .
+      dockerfile: packages/app-db/Dockerfile  # Adjust the path to your 'app' package Dockerfile
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: travel
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - db
+    networks:
+      - app-network
+    command: yarn migration:run  # Run migrations after building
 
   travel-server:
     build:
       context: .
       dockerfile: packages/travel-server/Dockerfile
-      network: host
-      args:
-        - ENV_NAME=local
     environment:
       DB_HOST: db
       DB_PORT: 5432
@@ -26,9 +43,10 @@ services:
       DB_PASSWORD: password
       DB_DATABASE: travel
     ports:
-      - '3000:3000'
+      - '8080:8080'
     depends_on:
-      - app-db
+      - db
+      - app-db  # Ensure app-db builds first and runs migrations
     networks:
       - app-network
 

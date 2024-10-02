@@ -5,7 +5,11 @@
   "scripts": {
     "build": "rm -rf dist && yarn esbuild src/index.ts --bundle --minify --platform=node --outfile=dist/index.js",
     "build:dev": "rm -rf dist && yarn tsc -p tsconfig.json",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "typeorm": "typeorm-ts-node-commonjs",
+    "migration:generate": "yarn typeorm migration:generate -d ./src/typeorm.config.ts src/migrations/$NAME",
+    "migration:run": "yarn typeorm migration:run -d ./src/typeorm.config.ts",
+    "migration:revert": "yarn typeorm migration:revert -d ./src/typeorm.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.4",

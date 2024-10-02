@@ -46,8 +46,8 @@ RUN yarn workspace travel-server build:dev
 # Install only production dependencies
 # RUN yarn workspaces focus --production
 # RUN yarn install
-# Expose port 3000 for your app
-EXPOSE 3000
+# Expose port 8080 for your app
+EXPOSE 8080
 
 # Run the built application
 CMD ["yarn", "workspace", "travel-server", "start"]
