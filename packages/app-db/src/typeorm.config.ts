@@ -1,7 +1,7 @@
 import { DataSource } from "typeorm";
-import { User, Place } from "./models"; // Adjust the path to your entities
+import { User, Place, EditRequest, Category } from "./models"; // Adjust the path to your entities
 
-export const entities = [User, Place];
+export const entities = [User, Place, EditRequest, Category];
 // Create and export a DataSource instance
 export const AppDataSource = new DataSource({
   type: "postgres",

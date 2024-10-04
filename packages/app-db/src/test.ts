@@ -6,7 +6,7 @@ async function start() {
     await repositoryController.initializeRepositories()
     const service = new PlaceService(repositoryController);
     const places = await service.getMany()
-    console.log(places);
+    console.log(places[0]);
   } catch (e) {
     console.log(`I died: ${e}`);
   }

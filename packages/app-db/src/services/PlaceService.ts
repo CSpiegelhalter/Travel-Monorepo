@@ -2,9 +2,7 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { Point, Repository } from "typeorm";
 import { CreatePlaceDto } from "../dto/place.dto";
 import { Place } from "../models/Place";
-import {
-  RepositoryController,
-} from "../contoller/RepositoryController";
+import { RepositoryController } from "../contoller/RepositoryController";
 
 @Injectable()
 export class PlaceService {
@@ -55,6 +53,9 @@ export class PlaceService {
     return this.placeRepository
       .createQueryBuilder("place")
       .select()
+      .leftJoinAndSelect("place.editedByUsers", "editedByUsers")
+      .leftJoinAndSelect("place.addedByUser", "addedByUser")
+      .leftJoinAndSelect("place.categories", "categories")
       .where(
         "ST_DWithin(place.coordinates, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :range)",
         { lon: longitude, lat: latitude, range: rangeKm * 1000 }
@@ -62,11 +63,46 @@ export class PlaceService {
       .getMany();
   }
 
-  public async getMany(): Promise<Place[]> {
+  public async getMany(userid?: string): Promise<Place[]> {
     return this.placeRepository
       .createQueryBuilder("place")
       .select()
+      .leftJoinAndSelect("place.editedByUsers", "editedByUsers")
+      .leftJoinAndSelect("place.addedByUser", "addedByUser")
+      .leftJoinAndSelect("place.categories", "categories")
       .take(25)
       .getMany();
   }
+
+  public async getById(id: string): Promise<Place> {
+    return this.placeRepository.findOne({
+      where: { id: Number(id) },
+      relations: ["editedByUsers", "addedByUser", "categories"],
+    });
+  }
+
+  public async getEditedUsers(placeId: string): Promise<Place> {
+    return this.placeRepository.findOne({
+      where: { id: Number(placeId) },
+      relations: ["editedByUsers"],
+    });
+  }
+
+  // public async getMany(userId?: string): Promise<Place[]> {
+  //   const query = this.placeRepository
+  //     .createQueryBuilder("place")
+  //     .leftJoinAndSelect(
+  //       "SavedPlace", // The SavedPlace table
+  //       "savedPlace", // Alias for SavedPlace
+  //       "savedPlace.placeId = place.id AND savedPlace.userId = :userId", // Join condition
+  //       { userId } // Pass the userId as a parameter
+  //     )
+  //     .select([
+  //       "place", // Select all fields from the Place table
+  //       "CASE WHEN savedPlace.userId IS NOT NULL THEN true ELSE false END AS isSaved", // Add isSaved field
+  //     ])
+  //     .take(25);
+
+  //   return query.getRawMany();
+  // }
 }

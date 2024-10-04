@@ -1,10 +1,10 @@
 import { Server } from "../../app";
-import getMany from "./get-many";
+import create from "./create";
 import getById from "./getById";
-import uploadImage from "./uploadImage";
+import getManyByStatus from "./getManyByStatus";
 
 export default function (server: Server): void {
-  getMany(server);
+  create(server);
   getById(server);
-  uploadImage(server);
+  getManyByStatus(server)
 }

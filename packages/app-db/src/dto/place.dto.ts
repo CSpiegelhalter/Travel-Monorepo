@@ -1,5 +1,6 @@
 import { IsNumber, Min, Max, IsString, IsOptional } from "class-validator";
 import { Transform } from "class-transformer";
+import { Category } from "../models";
 
 export class CreatePlaceDto {
   @IsString()
@@ -23,7 +24,7 @@ export class CreatePlaceDto {
   website: string;
 
   @IsString()
-  categories: string;
+  categories: Category[];
 
   @IsString()
   short_description: string;
@@ -32,7 +33,7 @@ export class CreatePlaceDto {
   long_description: string;
 
   @IsString()
-  images: string;
+  images: string[];
 
   @IsOptional()
   @IsNumber()
