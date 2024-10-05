@@ -1,8 +1,6 @@
-import { PlaceService } from "app-db";
+import { PlaceService, EditRequestService, UserService } from "app-db";
 import { Server } from "../../app";
-import { EditRequestService } from "app-db/dist/services/EditRequestService";
 import { FastifyRequest, FastifyReply } from "fastify";
-import { UserService } from "app-db/dist/services/UserService";
 
 interface UserRequestBody {
   placeId: string;
@@ -30,21 +28,29 @@ export default function (server: Server): Server {
       ]);
 
       if (!place) {
-        return res.status(404).send({ error: "Place not found" });
+        const error = "Place not found";
+        console.log(error);
+        return res.status(404).send({ error });
       }
       if (!user) {
-        return res.status(404).send({ error: "User not found" });
+        const error = "User not found";
+        console.log(error);
+        return res.status(404).send({ error });
       }
-
+      if (user.role !== "admin") {
+        const error = "User not an admin";
+        console.log(error);
+        return res.status(404).send({ error });
+      }
       const editRequest = await editRequestService.create({
         placeId,
         userId,
         requestedChanges,
       });
       // TODO: Send me an email
-      return res
-        .status(200)
-        .send({ message: "Edit request submitted successfully", editRequest });
+      const message = "Edit request submitted successfully";
+      console.log(message);
+      return res.status(200).send({ message, editRequest, status: 200 });
     },
   });
 

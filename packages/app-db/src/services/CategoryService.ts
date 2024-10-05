@@ -5,21 +5,20 @@ import { Category } from "../models";
 
 @Injectable()
 export class CategoryService {
-  private placeRepository: Repository<Category>;
+  private repo: Repository<Category>;
 
   constructor(private readonly repositoryController: RepositoryController) {
-    this.placeRepository =
-      this.repositoryController.getRepository<Category>("Category");
+    this.repo = this.repositoryController.getRepository<Category>("Category");
   }
 
   public async create(name: string): Promise<Category> {
-    return this.placeRepository.save({
+    return this.repo.save({
       name: name,
     });
   }
 
   public async getByName(name: string): Promise<Category> {
-    return this.placeRepository.findOne({
+    return this.repo.findOne({
       where: { name },
     });
   }

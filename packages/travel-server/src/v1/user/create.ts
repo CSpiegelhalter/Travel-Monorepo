@@ -1,11 +1,11 @@
+import { UserService } from "app-db";
 import { Server } from "../../app";
-import { UserService } from "app-db/dist/services/UserService";
 import { FastifyRequest, FastifyReply } from "fastify";
 
 interface UserRequestBody {
   username: string;
   email: string;
-  id: string;
+  userId: string;
 }
 
 export default function (server: Server): Server {
@@ -17,10 +17,13 @@ export default function (server: Server): Server {
       res: FastifyReply
     ) => {
       const repositoryController = server.repositoryController;
-      const { email, username, id } = req.body;
+      const { email, username, userId } = req.body;
+      console.log(
+        `Recieved user create request for email: ${email}, username: ${username}, userId: ${userId}`
+      );
 
       const service = new UserService(repositoryController);
-      const user = await service.create({ email, username, id });
+      const user = await service.create({ email, username, id: userId });
       console.log(user);
       await res.send(user);
     },

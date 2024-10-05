@@ -16,10 +16,10 @@ type Status = (typeof STATUSES)[number];
 
 @Injectable()
 export class EditRequestService {
-  private placeRepository: Repository<EditRequest>;
+  private repo: Repository<EditRequest>;
 
   constructor(private readonly repositoryController: RepositoryController) {
-    this.placeRepository =
+    this.repo =
       this.repositoryController.getRepository<EditRequest>("EditRequest");
   }
 
@@ -28,7 +28,7 @@ export class EditRequestService {
     userId,
     requestedChanges,
   }: EditRequestCreateParams): Promise<EditRequest> {
-    return this.placeRepository.save({
+    return this.repo.save({
       placeId,
       userId,
       requestedChanges,
@@ -36,7 +36,7 @@ export class EditRequestService {
   }
 
   public async getManyByStatus(status: Status): Promise<EditRequest[]> {
-    return this.placeRepository
+    return this.repo
       .createQueryBuilder("editRequest")
       .select()
       .where("editRequest.status = :status", { status })
@@ -44,7 +44,7 @@ export class EditRequestService {
   }
 
   public async getById(id: string): Promise<EditRequest> {
-    return this.placeRepository
+    return this.repo
       .createQueryBuilder("editRequest")
       .select()
       .leftJoinAndSelect("editRequest.place", "place")

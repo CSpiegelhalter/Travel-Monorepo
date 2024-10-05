@@ -11,16 +11,15 @@ type UserModel = {
 
 @Injectable()
 export class UserService {
-  private placeRepository: Repository<User>;
+  private repo: Repository<User>;
 
   constructor(private readonly repositoryController: RepositoryController) {
-    this.placeRepository =
-      this.repositoryController.getRepository<User>("User");
+    this.repo = this.repositoryController.getRepository<User>("User");
   }
 
   public async create(user: UserModel): Promise<User> {
     const { email, username, id } = user;
-    return this.placeRepository.save({
+    return this.repo.save({
       username,
       email,
       id,
@@ -28,10 +27,19 @@ export class UserService {
   }
 
   public async getById(id: string): Promise<User> {
-    return this.placeRepository
+    return this.repo
       .createQueryBuilder("user")
       .select()
       .where("user.id = :id", { id })
       .getOne();
+  }
+
+  public async getRole(userId: string): Promise<string> {
+    const userRecord = await this.repo.findOne({
+      where: { id: userId },
+      select: ["role"],
+    });
+
+    return userRecord.role;
   }
 }

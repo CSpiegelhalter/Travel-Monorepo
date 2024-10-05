@@ -6,11 +6,10 @@ import { RepositoryController } from "../contoller/RepositoryController";
 
 @Injectable()
 export class PlaceService {
-  private placeRepository: Repository<Place>;
+  private repo: Repository<Place>;
 
   constructor(private readonly repositoryController: RepositoryController) {
-    this.placeRepository =
-      this.repositoryController.getRepository<Place>("Place");
+    this.repo = this.repositoryController.getRepository<Place>("Place");
   }
 
   public async create(place: CreatePlaceDto): Promise<Place> {
@@ -19,7 +18,7 @@ export class PlaceService {
       coordinates: [place.longitude, place.latitude],
     };
 
-    return this.placeRepository.save({
+    return this.repo.save({
       name: place.name,
       address: place.address,
       city: place.city,
@@ -50,7 +49,7 @@ export class PlaceService {
       throw new BadRequestException("Invalid coordinates");
     }
 
-    return this.placeRepository
+    return this.repo
       .createQueryBuilder("place")
       .select()
       .leftJoinAndSelect("place.editedByUsers", "editedByUsers")
@@ -64,7 +63,7 @@ export class PlaceService {
   }
 
   public async getMany(userid?: string): Promise<Place[]> {
-    return this.placeRepository
+    return this.repo
       .createQueryBuilder("place")
       .select()
       .leftJoinAndSelect("place.editedByUsers", "editedByUsers")
@@ -75,21 +74,21 @@ export class PlaceService {
   }
 
   public async getById(id: string): Promise<Place> {
-    return this.placeRepository.findOne({
+    return this.repo.findOne({
       where: { id: Number(id) },
       relations: ["editedByUsers", "addedByUser", "categories"],
     });
   }
 
   public async getEditedUsers(placeId: string): Promise<Place> {
-    return this.placeRepository.findOne({
+    return this.repo.findOne({
       where: { id: Number(placeId) },
       relations: ["editedByUsers"],
     });
   }
 
   // public async getMany(userId?: string): Promise<Place[]> {
-  //   const query = this.placeRepository
+  //   const query = this.repo
   //     .createQueryBuilder("place")
   //     .leftJoinAndSelect(
   //       "SavedPlace", // The SavedPlace table
