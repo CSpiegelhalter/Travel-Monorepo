@@ -1,13 +1,12 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { Point, Repository } from "typeorm";
-import { CreatePlaceDto } from "../dto/place.dto";
+import { Injectable } from "@nestjs/common";
+import { Repository } from "typeorm";
 import { Place } from "../models/Place";
 import { RepositoryController } from "../contoller/RepositoryController";
-import { EditRequest } from "../models";
+import { EditRequest, User } from "../models";
 
 interface EditRequestCreateParams {
-  placeId: string;
-  userId: string;
+  place: Place;
+  user: User;
   requestedChanges: any;
 }
 
@@ -24,13 +23,13 @@ export class EditRequestService {
   }
 
   public async create({
-    placeId,
-    userId,
+    place,
+    user,
     requestedChanges,
   }: EditRequestCreateParams): Promise<EditRequest> {
     return this.repo.save({
-      placeId,
-      userId,
+      place,
+      user,
       requestedChanges,
     });
   }

@@ -43,8 +43,8 @@ export default function (server: Server): Server {
         return res.status(404).send({ error });
       }
       const editRequest = await editRequestService.create({
-        placeId,
-        userId,
+        place,
+        user,
         requestedChanges,
       });
       // TODO: Send me an email
