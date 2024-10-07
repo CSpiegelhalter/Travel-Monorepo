@@ -1,5 +1,10 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { Point, Repository } from "typeorm";
+import {
+  FindManyOptions,
+  Point,
+  Repository,
+  SelectQueryBuilder,
+} from "typeorm";
 import { CreatePlaceDto } from "../dto/place.dto";
 import { Place } from "../models/Place";
 import { RepositoryController } from "../contoller/RepositoryController";
@@ -62,22 +67,65 @@ export class PlaceService {
       .getMany();
   }
 
-  public async getMany(userid?: string): Promise<Place[]> {
-    return this.repo
+  public async getMany(userId?: string): Promise<Place[]> {
+    console.log("in the get many");
+    const query = this.repo
       .createQueryBuilder("place")
-      .select()
-      .leftJoinAndSelect("place.editedByUsers", "editedByUsers")
-      .leftJoinAndSelect("place.addedByUser", "addedByUser")
-      .leftJoinAndSelect("place.categories", "categories")
-      .take(25)
-      .getMany();
+      .select([
+        "place.id",
+        "place.name",
+        "place.short_description",
+        "place.rating",
+        "place.reviews",
+        "place.images",
+        "place.latitude",
+        "place.longitude",
+      ]);
+
+    if (userId) {
+      console.log("I HAVE THE USER ID");
+      query
+        .leftJoin("place.savedByUsers", "savedByUsers")
+        .addSelect(
+          "CASE WHEN savedByUsers.id IS NOT NULL THEN true ELSE false END",
+          "isSaved"
+        )
+        .where("savedByUsers.id = :userId OR savedByUsers.id IS NULL", {
+          userId,
+        });
+    }
+
+    const { entities, raw } = await query.take(25).getRawAndEntities();
+
+    // Map `isSaved` value from raw data to entities
+    return entities.map((place, index) => {
+      place["isSaved"] = raw[index].isSaved;
+      return place;
+    });
   }
 
   public async getById(id: string): Promise<Place> {
-    return this.repo.findOne({
-      where: { id: Number(id) },
-      relations: ["editedByUsers", "addedByUser", "categories"],
-    });
+    const placeWithSavedCount = await this.repo
+      .createQueryBuilder("place")
+      .leftJoinAndSelect("place.editedByUsers", "editedByUsers")
+      .leftJoinAndSelect("place.addedByUser", "addedByUser")
+      .leftJoinAndSelect("place.categories", "categories")
+      .leftJoin("place.savedByUsers", "savedByUsers")
+      .addSelect("COUNT(savedByUsers.id)", "savedCount")
+      .where("place.id = :id", { id: Number(id) })
+      .groupBy("place.id")
+      .addGroupBy("editedByUsers.id")
+      .addGroupBy("addedByUser.id")
+      .addGroupBy("categories.id")
+      .getRawAndEntities();
+
+    const { entities, raw } = placeWithSavedCount;
+
+    // Attach the saved count to the Place entity
+    const place = entities[0];
+    place["savedCount"] = parseInt(raw[0].savedCount, 10);
+
+    return place;
   }
 
   public async getEditedUsers(placeId: string): Promise<Place> {

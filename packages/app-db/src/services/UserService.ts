@@ -34,6 +34,13 @@ export class UserService {
       .getOne();
   }
 
+  public async getUserSavedPlaces(id: string): Promise<User> {
+    return this.repo.findOne({
+      where: { id },
+      relations: ["savedPlaces"],
+    });
+  }
+
   public async getRole(userId: string): Promise<string> {
     const userRecord = await this.repo.findOne({
       where: { id: userId },
