@@ -61,7 +61,15 @@ export class PlaceService {
       .getMany();
   }
 
-  public async getMany(userId?: string): Promise<Place[]> {
+  public async getMany({
+    userId,
+    page = 1,
+    pageSize = 16,
+  }: {
+    userId?: string;
+    page: number;
+    pageSize: number;
+  }): Promise<any> {
     console.log("in the get many");
 
     const query = this.repo
@@ -99,10 +107,17 @@ export class PlaceService {
         });
     }
 
-    const { entities, raw } = await query.take(25).getRawAndEntities();
+    const { entities, raw } = await query
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getRawAndEntities();
+
+    const total = await this.repo.createQueryBuilder("place").getCount();
+
+    const totalPages = Math.ceil(total / pageSize);
 
     // Map `isSaved` value from raw data to entities
-    return entities.map((place, index) => {
+    const places = entities.map((place, index) => {
       place["isSaved"] = raw[index].isSaved;
 
       // Extract and assign images, limiting to 3
@@ -113,6 +128,14 @@ export class PlaceService {
 
       return place;
     });
+
+    return {
+      places,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
   }
 
   public async getById(id: string): Promise<Place> {
@@ -225,7 +248,7 @@ export class PlaceService {
     return { addedCount, editedCount, savedCount };
   }
 
-  public async getSavedPlacesByUser(userId: string, page = 1, pageSize = 15) {
+  public async getSavedPlacesByUser(userId: string, page = 1, pageSize = 16) {
     const { entities: places, raw } = await this.repo
       .createQueryBuilder("place")
       .leftJoin("place.savedByUsers", "savedByUsers")

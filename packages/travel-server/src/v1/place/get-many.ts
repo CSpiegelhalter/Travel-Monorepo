@@ -4,6 +4,8 @@ import { FastifyRequest, FastifyReply } from "fastify";
 
 interface Query {
   userId?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export default function (server: Server): Server {
@@ -16,15 +18,15 @@ export default function (server: Server): Server {
     ) => {
       const repositoryController = server.repositoryController;
       console.log("am i even getting here??");
-      const { userId } = req.query;
+      const { userId, page, pageSize } = req.query;
 
       console.log("did i die");
 
       const service = new PlaceService(repositoryController);
 
       const places = userId
-        ? await service.getMany(userId)
-        : await service.getMany();
+        ? await service.getMany({ userId, page, pageSize })
+        : await service.getMany({ page, pageSize });
 
       await res.send(places);
     },
