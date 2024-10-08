@@ -1,10 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import {
-  FindManyOptions,
-  Point,
-  Repository,
-  SelectQueryBuilder,
-} from "typeorm";
+import { Point, Repository } from "typeorm";
 import { CreatePlaceDto } from "../dto/place.dto";
 import { Place } from "../models/Place";
 import { RepositoryController } from "../contoller/RepositoryController";
@@ -33,7 +28,6 @@ export class PlaceService {
       categories: place.categories,
       short_description: place.short_description,
       long_description: place.long_description,
-      images: place.images,
       rating: place.rating,
       reviews: place.reviews,
       latitude: place.latitude,
@@ -69,6 +63,7 @@ export class PlaceService {
 
   public async getMany(userId?: string): Promise<Place[]> {
     console.log("in the get many");
+
     const query = this.repo
       .createQueryBuilder("place")
       .select([
@@ -77,10 +72,19 @@ export class PlaceService {
         "place.short_description",
         "place.rating",
         "place.reviews",
-        "place.images",
         "place.latitude",
         "place.longitude",
-      ]);
+      ])
+      .leftJoinAndSelect("place.images", "image", "image.placeId = place.id")
+      .addSelect(
+        (subQuery) =>
+          subQuery
+            .select("ARRAY_AGG(image.src)")
+            .from("image", "image")
+            .where("image.placeId = place.id")
+            .limit(3),
+        "place.images"
+      );
 
     if (userId) {
       console.log("I HAVE THE USER ID");
@@ -100,6 +104,13 @@ export class PlaceService {
     // Map `isSaved` value from raw data to entities
     return entities.map((place, index) => {
       place["isSaved"] = raw[index].isSaved;
+
+      // Extract and assign images, limiting to 3
+      place.images = raw
+        .filter((row) => row.place_id === place.id)
+        .map((row) => row.image_src)
+        .slice(0, 3);
+
       return place;
     });
   }
@@ -112,6 +123,15 @@ export class PlaceService {
       .leftJoinAndSelect("place.categories", "categories")
       .leftJoin("place.savedByUsers", "savedByUsers")
       .addSelect("COUNT(savedByUsers.id)", "savedCount")
+      .addSelect(
+        (subQuery) =>
+          subQuery
+            .select("ARRAY_AGG(image.src)")
+            .from("image", "image")
+            .where("image.placeId = place.id")
+            .limit(3),
+        "images"
+      )
       .where("place.id = :id", { id: Number(id) })
       .groupBy("place.id")
       .addGroupBy("editedByUsers.id")
@@ -121,9 +141,15 @@ export class PlaceService {
 
     const { entities, raw } = placeWithSavedCount;
 
-    // Attach the saved count to the Place entity
     const place = entities[0];
-    place["savedCount"] = parseInt(raw[0].savedCount, 10);
+    if (!place) {
+      return place;
+    }
+    const rawData = raw[0] || {};
+
+    // Safely assign the additional properties
+    place["savedCount"] = parseInt(rawData.savedCount || "0", 10);
+    place["images"] = rawData.images || [];
 
     return place;
   }
@@ -133,6 +159,185 @@ export class PlaceService {
       where: { id: Number(placeId) },
       relations: ["editedByUsers"],
     });
+  }
+
+  public async updatePlace(
+    id: string,
+    updatedFields: Partial<Place>
+  ): Promise<Place> {
+    // Fetch the current Place entity, including `editedByUsers`
+    const place = await this.repo.findOne({
+      where: { id: Number(id) },
+      relations: ["editedByUsers"], // Include editedByUsers to manage this relation
+    });
+
+    if (!place) {
+      throw new Error(`Place with id ${id} not found`);
+    }
+
+    // Update the basic fields from `updatedFields`
+    Object.assign(place, updatedFields);
+
+    // If `updatedFields` includes `editedByUsers`, handle the relation separately
+    if (updatedFields.editedByUsers) {
+      place.editedByUsers = updatedFields.editedByUsers;
+    }
+
+    // Save the updated Place entity with updated relationships
+    const updatedPlace = await this.repo.save(place);
+
+    return updatedPlace;
+  }
+
+  public async getUserRelatedCounts(userId: string): Promise<{
+    addedCount: number;
+    editedCount: number;
+    savedCount: number;
+  }> {
+    const queryBuilder = this.repo
+      .createQueryBuilder("place")
+      .select([
+        "COUNT(DISTINCT CASE WHEN addedByUser.id = :userId THEN place.id END) AS addedcount",
+        "COUNT(DISTINCT CASE WHEN editedByUsers.id = :userId THEN place.id END) AS editedcount",
+        "COUNT(DISTINCT CASE WHEN savedByUsers.id = :userId THEN place.id END) AS savedcount",
+      ])
+      .leftJoin("place.addedByUser", "addedByUser")
+      .leftJoin("place.editedByUsers", "editedByUsers")
+      .leftJoin("place.savedByUsers", "savedByUsers")
+      .setParameter("userId", userId);
+
+    console.log("Generated SQL Query:", queryBuilder.getSql());
+    console.log("Query Parameters:", { userId });
+
+    const result = await queryBuilder.getRawOne();
+
+    if (!result) {
+      console.error("No results found for userId:", userId);
+      return { addedCount: 0, editedCount: 0, savedCount: 0 };
+    }
+
+    console.log("Raw Query Result:", result);
+
+    const addedCount = parseInt(result.addedcount, 10) || 0;
+    const editedCount = parseInt(result.editedcount, 10) || 0;
+    const savedCount = parseInt(result.savedcount, 10) || 0;
+
+    return { addedCount, editedCount, savedCount };
+  }
+
+  public async getSavedPlacesByUser(userId: string, page = 1, pageSize = 15) {
+    const { entities: places, raw } = await this.repo
+      .createQueryBuilder("place")
+      .leftJoin("place.savedByUsers", "savedByUsers")
+      .addSelect(
+        (subQuery) =>
+          subQuery
+            .select("ARRAY_AGG(image.src)", "images")
+            .from("image", "image")
+            .where("image.placeId = place.id")
+            .limit(3),
+        "place_images"
+      )
+      .where("savedByUsers.id = :userId", { userId })
+      .orderBy("place.id", "ASC")
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getRawAndEntities();
+
+    const total = await this.repo
+      .createQueryBuilder("place")
+      .leftJoin("place.savedByUsers", "savedByUsers")
+      .where("savedByUsers.id = :userId", { userId })
+      .getCount();
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    // Manually add `images` as an array of strings to each `place`
+    const placesWithImages = places.map((place, index) => {
+      const rawPlace = raw[index];
+      return {
+        ...place,
+        images: rawPlace.place_images || [], // `place_images` should contain only `src` values as strings
+      };
+    });
+
+    return {
+      places: placesWithImages,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
+  }
+
+  public async getEditedPlacesByUser(userId: string, page = 1, pageSize = 15) {
+    const [places, total] = await this.repo
+      .createQueryBuilder("place")
+      .leftJoin("place.editedByUsers", "editedByUsers")
+      .leftJoinAndSelect("place.images", "image", "image.placeId = place.id")
+      .addSelect(
+        (subQuery) =>
+          subQuery
+            .select("ARRAY_AGG(image.src)")
+            .from("image", "image")
+            .where("image.placeId = place.id")
+            .limit(3),
+        "place.images"
+      )
+      .where("editedByUsers.id = :userId", { userId })
+      .orderBy("place.id", "ASC")
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    if (places?.["images"]) {
+      places["images"] = places["images"].map((image) => image.src);
+    }
+
+    return {
+      places,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
+  }
+
+  public async getAddedPlacesByUser(userId: string, page = 1, pageSize = 15) {
+    const [places, total] = await this.repo
+      .createQueryBuilder("place")
+      .leftJoin("place.addedByUser", "addedByUser")
+      .leftJoinAndSelect("place.images", "image", "image.placeId = place.id")
+      .addSelect(
+        (subQuery) =>
+          subQuery
+            .select("ARRAY_AGG(image.src)")
+            .from("image", "image")
+            .where("image.placeId = place.id")
+            .limit(3),
+        "place.images"
+      )
+      .where("addedByUser.id = :userId", { userId })
+      .orderBy("place.id", "ASC")
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    if (places?.["images"]) {
+      places["images"] = places["images"].map((image) => image.src);
+    }
+
+    return {
+      places,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
   }
 
   // public async getMany(userId?: string): Promise<Place[]> {

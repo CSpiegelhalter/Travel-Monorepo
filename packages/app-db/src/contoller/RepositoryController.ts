@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Repository } from "typeorm";
 import { Place } from "../models/Place";
 import { AppDataSource } from "../typeorm.config";
-import { Category, EditRequest, User } from "../models";
+import { Category, EditRequest, Image, User } from "../models";
 
 @Injectable()
 class RepositoryController {
@@ -19,6 +19,7 @@ class RepositoryController {
         AppDataSource.getRepository(EditRequest)
       );
       this.repositories.set("Category", AppDataSource.getRepository(Category));
+      this.repositories.set("Image", AppDataSource.getRepository(Image));
 
       this.isInitialized = true;
     }

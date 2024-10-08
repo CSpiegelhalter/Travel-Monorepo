@@ -50,6 +50,9 @@ const getPlace = async ({ placeId, userId, repo }) => {
       savedPlaceService.isPlaceSavedByUser(userId, placeId),
       placeService.getById(placeId),
     ]);
+    if (!place) {
+      return place;
+    }
     (place as any).isSaved = isSavedByUser;
     return place;
   } else {

@@ -50,4 +50,31 @@ export class EditRequestService {
       .where("editRequest.id = :id", { id })
       .getOne();
   }
+
+  public async update({
+    id,
+    status,
+    requestedChanges,
+  }: {
+    id: string;
+    status: string;
+    requestedChanges?: any;
+  }): Promise<EditRequest | null> {
+    const editRequest = await this.repo.findOne({ where: { id: Number(id) } });
+
+    if (!editRequest) {
+      throw new Error(`EditRequest with id ${id} not found`);
+    }
+
+    // Update the status
+    editRequest.status = status;
+    if (requestedChanges) {
+      editRequest.requestedChanges = requestedChanges;
+    }
+
+    // Save the updated EditRequest
+    await this.repo.save(editRequest);
+
+    return editRequest;
+  }
 }

@@ -17,12 +17,15 @@ export default function (server: Server): Server {
       const repositoryController = server.repositoryController;
       console.log("am i even getting here??");
       const { userId } = req.query;
+
       console.log("did i die");
 
       const service = new PlaceService(repositoryController);
-      console.log("did i get the service???");
-      const places = await service.getMany(userId);
-      console.log(places);
+
+      const places = userId
+        ? await service.getMany(userId)
+        : await service.getMany();
+
       await res.send(places);
     },
   });

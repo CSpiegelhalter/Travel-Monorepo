@@ -6,9 +6,11 @@ import {
   ManyToMany,
   ManyToOne,
   JoinTable,
+  OneToMany,
 } from "typeorm";
 import { User } from "./User";
 import { Category } from "./Category";
+import { Image } from "./Image";
 
 @Entity()
 export class Place {
@@ -43,8 +45,8 @@ export class Place {
   @Column()
   long_description: string;
 
-  @Column({ type: "text", array: true, default: [] })
-  images: string[];
+  @OneToMany(() => Image, (image) => image.place, { cascade: true })
+  images: Image[];
 
   @Column("float", { nullable: true })
   rating: number;

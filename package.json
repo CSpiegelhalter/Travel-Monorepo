@@ -6,7 +6,8 @@
     "packages/*"
   ],
   "scripts": {
-    "run-local": "docker-compose up --build"
+    "run-local": "docker-compose up --build",
+    "kill-docker": "docker ps -q | xargs -r docker stop && docker ps -aq | xargs -r docker rm && docker images -q | xargs -r docker rmi && docker volume ls -q | xargs -r docker volume rm && docker system prune -a --volumes -f"
   },
   "packageManager": "yarn@4.5.0"
 }
