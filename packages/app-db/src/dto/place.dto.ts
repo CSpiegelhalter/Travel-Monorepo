@@ -10,18 +10,18 @@ export class CreatePlaceDto {
 
   @IsOptional()
   @IsString()
-  city: string;
+  city?: string;
 
   @IsOptional()
   @IsString()
-  state: string;
+  state?: string;
 
   @IsString()
   country: string;
 
   @IsOptional()
   @IsString()
-  website: string;
+  website?: string;
 
   @IsString()
   categories: Category[];
@@ -32,16 +32,13 @@ export class CreatePlaceDto {
   @IsString()
   long_description: string;
 
-  @IsString()
-  images: string[];
+  @IsOptional()
+  @IsNumber()
+  rating?: number;
 
   @IsOptional()
   @IsNumber()
-  rating: number;
-
-  @IsOptional()
-  @IsNumber()
-  reviews: number;
+  reviews?: number;
 
   @IsNumber()
   @Transform((obj) => parseFloat(obj.value))

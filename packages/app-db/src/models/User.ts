@@ -1,5 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToMany,
+  JoinTable,
+  OneToMany,
+} from "typeorm";
 import { Place } from "./Place";
+import { AddRequest } from "./AddRequest";
 
 @Entity()
 export class User {
@@ -34,4 +42,7 @@ export class User {
     },
   })
   savedPlaces: Place[];
+
+  @OneToMany(() => AddRequest, (addRequest) => addRequest.user)
+  addRequests: AddRequest[];
 }

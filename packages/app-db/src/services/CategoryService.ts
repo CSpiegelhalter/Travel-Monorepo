@@ -22,4 +22,8 @@ export class CategoryService {
       where: { name },
     });
   }
+
+  public async getAll(): Promise<Category[]> {
+    return this.repo.find();
+  }
 }

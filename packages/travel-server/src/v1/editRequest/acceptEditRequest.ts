@@ -59,6 +59,7 @@ export default function (server: Server): Server {
       const { savedCount, images, isSaved, ...basePlace } = place as any;
       console.log("wtffff");
       console.log(basePlace);
+
       // Handle addedImages: create new Image entries
       if (requestedChanges.addedImages) {
         for (const imageUrl of requestedChanges.addedImages) {

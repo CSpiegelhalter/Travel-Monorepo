@@ -3,6 +3,7 @@ import { Point, Repository } from "typeorm";
 import { CreatePlaceDto } from "../dto/place.dto";
 import { Place } from "../models/Place";
 import { RepositoryController } from "../contoller/RepositoryController";
+import { User } from "../models";
 
 @Injectable()
 export class PlaceService {
@@ -12,7 +13,10 @@ export class PlaceService {
     this.repo = this.repositoryController.getRepository<Place>("Place");
   }
 
-  public async create(place: CreatePlaceDto): Promise<Place> {
+  public async create(
+    place: CreatePlaceDto,
+    addedByUser?: User
+  ): Promise<Place> {
     const coordinates: Point = {
       type: "Point",
       coordinates: [place.longitude, place.latitude],
@@ -33,6 +37,7 @@ export class PlaceService {
       latitude: place.latitude,
       longitude: place.longitude,
       location: coordinates,
+      addedByUser: addedByUser ?? null,
     });
   }
 
@@ -294,33 +299,41 @@ export class PlaceService {
   }
 
   public async getEditedPlacesByUser(userId: string, page = 1, pageSize = 15) {
-    const [places, total] = await this.repo
+    const { entities: places, raw } = await this.repo
       .createQueryBuilder("place")
       .leftJoin("place.editedByUsers", "editedByUsers")
-      .leftJoinAndSelect("place.images", "image", "image.placeId = place.id")
       .addSelect(
         (subQuery) =>
           subQuery
-            .select("ARRAY_AGG(image.src)")
+            .select("ARRAY_AGG(image.src)", "images")
             .from("image", "image")
             .where("image.placeId = place.id")
             .limit(3),
-        "place.images"
+        "place_images"
       )
       .where("editedByUsers.id = :userId", { userId })
       .orderBy("place.id", "ASC")
       .skip((page - 1) * pageSize)
       .take(pageSize)
-      .getManyAndCount();
+      .getRawAndEntities();
 
+    const total = await this.repo
+      .createQueryBuilder("place")
+      .leftJoin("place.editedByUsers", "editedByUsers")
+      .where("editedByUsers.id = :userId", { userId })
+      .getCount();
     const totalPages = Math.ceil(total / pageSize);
 
-    if (places?.["images"]) {
-      places["images"] = places["images"].map((image) => image.src);
-    }
+    const placesWithImages = places.map((place, index) => {
+      const rawPlace = raw[index];
+      return {
+        ...place,
+        images: rawPlace.place_images || [], // `place_images` should contain only `src` values as strings
+      };
+    });
 
     return {
-      places,
+      places: placesWithImages,
       total,
       page,
       pageSize,
@@ -329,33 +342,41 @@ export class PlaceService {
   }
 
   public async getAddedPlacesByUser(userId: string, page = 1, pageSize = 15) {
-    const [places, total] = await this.repo
+    const { entities: places, raw } = await this.repo
       .createQueryBuilder("place")
       .leftJoin("place.addedByUser", "addedByUser")
-      .leftJoinAndSelect("place.images", "image", "image.placeId = place.id")
       .addSelect(
         (subQuery) =>
           subQuery
-            .select("ARRAY_AGG(image.src)")
+            .select("ARRAY_AGG(image.src)", "images")
             .from("image", "image")
             .where("image.placeId = place.id")
             .limit(3),
-        "place.images"
+        "place_images"
       )
       .where("addedByUser.id = :userId", { userId })
       .orderBy("place.id", "ASC")
       .skip((page - 1) * pageSize)
       .take(pageSize)
-      .getManyAndCount();
+      .getRawAndEntities();
 
+    const total = await this.repo
+      .createQueryBuilder("place")
+      .leftJoin("place.addedByUser", "addedByUser")
+      .where("addedByUser.id = :userId", { userId })
+      .getCount();
     const totalPages = Math.ceil(total / pageSize);
 
-    if (places?.["images"]) {
-      places["images"] = places["images"].map((image) => image.src);
-    }
+    const placesWithImages = places.map((place, index) => {
+      const rawPlace = raw[index];
+      return {
+        ...place,
+        images: rawPlace.place_images || [], // `place_images` should contain only `src` values as strings
+      };
+    });
 
     return {
-      places,
+      places: placesWithImages,
       total,
       page,
       pageSize,
