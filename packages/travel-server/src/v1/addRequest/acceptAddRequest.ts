@@ -48,7 +48,7 @@ export default function (server: Server): Server {
       const userService = new UserService(repositoryController);
       const imageService = new ImageService(repositoryController);
       const categoryService = new CategoryService(repositoryController);
-      const [user, addRequest] = await Promise.all([
+      const [adminUser, addRequest] = await Promise.all([
         userService.getById(userId),
         addRequestService.getById(addRequestId),
       ]);
@@ -58,40 +58,51 @@ export default function (server: Server): Server {
         console.log(error);
         return res.status(404).send({ error });
       }
-      if (!user) {
-        const error = "User not found";
+      if (!adminUser) {
+        const error = "Admin user not found";
         console.log(error);
         return res.status(404).send({ error });
       }
-      if (user.role !== "admin") {
+      if (adminUser.role !== "admin") {
         const error = "User not an admin";
         console.log(error);
         return res.status(403).send({ error });
       }
+      const submittedUser = await userService.getById(addRequest.user.id);
 
-      const { images, categories, latitude, longitude, newCategory, ...basePlace } =
-        placeData as PlaceData;
-        const allCategories: Category[] = []
-        if (newCategory) {
-            console.log('heres your new cats:')
-            console.log(newCategory)
-          const newCats = newCategory.split(",");
-          console.log(newCats);
-          for (const cat of newCats) {
-            console.log(cat);
-            const createdCat = await categoryService.create(cat.trim());
-            allCategories.push(createdCat)
-          }
+      const {
+        images,
+        categories,
+        latitude,
+        longitude,
+        newCategory,
+        ...basePlace
+      } = placeData as PlaceData;
+      const allCategories: Category[] = [];
+      if (newCategory) {
+        console.log("heres your new cats:");
+        console.log(newCategory);
+        const newCats = newCategory.split(",");
+        console.log(newCats);
+        for (const cat of newCats) {
+          console.log(cat);
+          const createdCat = await categoryService.create(cat.trim());
+          allCategories.push(createdCat);
         }
-        if (categories?.length) {
-            for (const cat of categories) {
-              const existingCat = await categoryService.getByName(cat);
-              allCategories.push(existingCat);
-            } 
+      }
+      if (categories?.length) {
+        for (const cat of categories) {
+          const existingCat = await categoryService.getByName(cat);
+          allCategories.push(existingCat);
         }
-        const placeCreate: CreatePlaceDto = { ...basePlace, latitude: Number(latitude), longitude: Number(longitude), categories: allCategories};
-      const place = await placeService.create(placeCreate, user);
-
+      }
+      const placeCreate: CreatePlaceDto = {
+        ...basePlace,
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+        categories: allCategories,
+      };
+      const place = await placeService.create(placeCreate, submittedUser);
 
       console.log("wtffff");
       console.log(basePlace);

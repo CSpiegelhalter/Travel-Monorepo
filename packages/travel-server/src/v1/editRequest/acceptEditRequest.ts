@@ -29,7 +29,7 @@ export default function (server: Server): Server {
       const userService = new UserService(repositoryController);
       const imageService = new ImageService(repositoryController);
 
-      const [place, user, editRequest] = await Promise.all([
+      const [place, adminUser, editRequest] = await Promise.all([
         placeService.getEditedUsers(placeId),
         userService.getById(userId),
         editRequestService.getById(editRequestId),
@@ -40,8 +40,8 @@ export default function (server: Server): Server {
         console.log(error);
         return res.status(404).send({ error });
       }
-      if (!user) {
-        const error = "User not found";
+      if (!adminUser) {
+        const error = "Admin user not found";
         console.log(error);
         return res.status(404).send({ error });
       }
@@ -50,11 +50,13 @@ export default function (server: Server): Server {
         console.log(error);
         return res.status(404).send({ error });
       }
-      if (user.role !== "admin") {
+      if (adminUser.role !== "admin") {
         const error = "User not an admin";
         console.log(error);
         return res.status(403).send({ error });
       }
+
+      const submittedUser = await userService.getById(editRequest.user.id);
 
       const { savedCount, images, isSaved, ...basePlace } = place as any;
       console.log("wtffff");
@@ -75,10 +77,10 @@ export default function (server: Server): Server {
       }
 
       const updatedEditedByUsers = place.editedByUsers.some(
-        (u) => u.id === user.id
+        (u) => u.id === submittedUser.id
       )
         ? place.editedByUsers
-        : [...place.editedByUsers, user];
+        : [...place.editedByUsers, submittedUser];
 
       const { addedImages, deletedImages, ...changesWithoutImages } =
         requestedChanges;

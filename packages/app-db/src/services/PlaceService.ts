@@ -99,19 +99,6 @@ export class PlaceService {
         "place.images"
       );
 
-    if (userId) {
-      console.log("I HAVE THE USER ID");
-      query
-        .leftJoin("place.savedByUsers", "savedByUsers")
-        .addSelect(
-          "CASE WHEN savedByUsers.id IS NOT NULL THEN true ELSE false END",
-          "isSaved"
-        )
-        .where("savedByUsers.id = :userId OR savedByUsers.id IS NULL", {
-          userId,
-        });
-    }
-
     const { entities, raw } = await query
       .skip((page - 1) * pageSize)
       .take(pageSize)
@@ -123,8 +110,6 @@ export class PlaceService {
 
     // Map `isSaved` value from raw data to entities
     const places = entities.map((place, index) => {
-      place["isSaved"] = raw[index].isSaved;
-
       // Extract and assign images, limiting to 3
       place.images = raw
         .filter((row) => row.place_id === place.id)

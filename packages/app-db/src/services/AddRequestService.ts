@@ -48,6 +48,7 @@ export class AddRequestService {
       .createQueryBuilder("addRequest")
       .select()
       .leftJoinAndSelect("addRequest.place", "place")
+      .leftJoinAndSelect("addRequest.user", "user")
       .where("addRequest.id = :id", { id })
       .getOne();
   }

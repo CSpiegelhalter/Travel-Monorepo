@@ -47,6 +47,7 @@ export class EditRequestService {
       .createQueryBuilder("editRequest")
       .select()
       .leftJoinAndSelect("editRequest.place", "place")
+      .leftJoinAndSelect("editRequest.user", "user")
       .where("editRequest.id = :id", { id })
       .getOne();
   }
