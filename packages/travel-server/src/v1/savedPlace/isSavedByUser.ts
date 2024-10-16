@@ -4,31 +4,29 @@ import { PlaceService } from "app-db/dist/services/PlaceService";
 import { FastifyRequest, FastifyReply } from "fastify";
 
 interface Query {
-  id: string; // The 'id' query parameter should be a string
+  placeId: string;
   userId: string;
 }
 
 export default function (server: Server): Server {
   server.route({
     method: "GET",
-    url: "/v1/getPlaceById",
+    url: "/v1/isSavedByUser",
     handler: async (
       req: FastifyRequest<{ Querystring: Query }>,
       res: FastifyReply
     ) => {
-      const { id, userId } = req.query;
-      console.log("Here be the user id:");
-      console.log(userId);
+      const { placeId, userId } = req.query;
+      
       const repositoryController = server.repositoryController;
-      const placeService = new PlaceService(repositoryController);
+      const savedPlaceService = new SavedPlaceService(repositoryController);
       try {
-        const place = await placeService.getById(id);
-
-        if (place) {
-          return res.send(place);
-        } else {
-          return res.status(404).send({ message: "Place not found" });
-        }
+        const isSaved = await savedPlaceService.isPlaceSavedByUser(
+          userId,
+          placeId
+        );
+return res.send(isSaved);
+       
       } catch (e) {
         return res.status(500).send({ error: `An error occurred: ${e}` });
       }

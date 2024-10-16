@@ -21,12 +21,15 @@ export default function (server: Server): Server {
       console.log(userId);
       const repositoryController = server.repositoryController;
 
+      console.log('HERE BE THE PAGE AND SIZE')
+      console.log(page);
+      console.log(typeof pageSize);
       try {
         const placeService = new PlaceService(repositoryController);
         const places = await placeService.getSavedPlacesByUser(
           userId,
-          page || 1,
-          pageSize || 15
+          page ? page : 1,
+          pageSize ? pageSize : 16
         );
         if (places) {
           return res.send(places);
