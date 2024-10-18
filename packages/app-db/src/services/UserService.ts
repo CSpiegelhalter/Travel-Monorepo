@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Repository } from "typeorm";
-import { Image, ProfilePicture, User } from "../models";
+import { ProfilePicture, User } from "../models";
 import { RepositoryController } from "../contoller/RepositoryController";
 
 type UserModel = {
@@ -51,6 +51,13 @@ export class UserService {
     return this.repo.findOne({
       where: { id },
       relations: ["savedPlaces"],
+    });
+  }
+
+  public async getUserHasBeenPlaces(id: string): Promise<User> {
+    return this.repo.findOne({
+      where: { id },
+      relations: ["userHasBeen"],
     });
   }
 

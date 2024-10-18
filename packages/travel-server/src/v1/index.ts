@@ -2,6 +2,7 @@ import { Server } from "../app";
 import addRequest from "./addRequest";
 import category from "./category";
 import editRequest from "./editRequest";
+import hasBeen from "./hasBeen";
 import place from "./place";
 import savedPlace from "./savedPlace";
 import user from "./user";
@@ -13,4 +14,5 @@ export default function (server: Server): void {
   savedPlace(server);
   category(server);
   addRequest(server);
+  hasBeen(server);
 }

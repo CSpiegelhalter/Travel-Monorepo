@@ -71,6 +71,9 @@ export class Place {
   @ManyToMany(() => User, (user) => user.savedPlaces)
   savedByUsers: User[];
 
+  @ManyToMany(() => User, (user) => user.userHasBeen)
+  usersHaveBeen: User[];
+
   @ManyToOne(() => User, { nullable: true })
   addedByUser: User | null;
 

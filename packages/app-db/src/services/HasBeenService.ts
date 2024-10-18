@@ -4,7 +4,7 @@ import { Place, User } from "../models";
 import { RepositoryController } from "../contoller/RepositoryController";
 
 @Injectable()
-export class SavedPlaceService {
+export class HasBeenService {
   private userRepo: Repository<User>;
 
   constructor(private readonly repositoryController: RepositoryController) {
@@ -17,21 +17,21 @@ export class SavedPlaceService {
    * @param place - The place to save
    * @returns The updated user entity with saved places
    */
-  public async savePlaceForUser(user: User, place: Place): Promise<User> {
+  public async saveHasBeenForUser(user: User, place: Place): Promise<User> {
     // Check if the place is already saved by the user
-    if (user.savedPlaces.some((savedPlace) => savedPlace.id === place.id)) {
-      throw new Error("Place already saved by user");
+    if (user.userHasBeen.some((hasBeen) => hasBeen.id === place.id)) {
+      throw new Error("User has already been to this place.");
     }
 
-    user.savedPlaces.push(place); // Add the place to the user's saved places
+    user.userHasBeen.push(place); // Add the place to the user's saved places
 
     return await this.userRepo.save(user); // Save the updated user entity
   }
 
-  public async unsavePlaceForUser(user: User, place: Place): Promise<User> {
+  public async unsaveHasBeenForUser(user: User, place: Place): Promise<User> {
     // Check if the place is saved by the user
-    const placeIndex = user.savedPlaces.findIndex(
-      (savedPlace) => savedPlace.id === place.id
+    const placeIndex = user.userHasBeen.findIndex(
+      (hasBeen) => hasBeen.id === place.id
     );
 
     if (placeIndex === -1) {
@@ -39,22 +39,22 @@ export class SavedPlaceService {
     }
 
     // Remove the place from the user's saved places
-    user.savedPlaces.splice(placeIndex, 1);
+    user.userHasBeen.splice(placeIndex, 1);
 
     return await this.userRepo.save(user); // Save the updated user entity
   }
 
-  public async isPlaceSavedByUser(
+  public async hasUserBeen(
     userId: string,
     placeId: string
   ): Promise<boolean> {
-    const savedCount = await this.userRepo
+    const hasBeenCount = await this.userRepo
       .createQueryBuilder("user")
-      .innerJoin("user.savedPlaces", "place")
+      .innerJoin("user.userHasBeen", "place")
       .where("user.id = :userId", { userId })
       .andWhere("place.id = :placeId", { placeId })
       .getCount();
 
-    return savedCount > 0;
+    return hasBeenCount > 0;
   }
 }

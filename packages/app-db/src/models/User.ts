@@ -48,6 +48,20 @@ export class User {
   })
   savedPlaces: Place[];
 
+  @ManyToMany(() => Place, (place) => place.usersHaveBeen)
+  @JoinTable({
+    name: "UserHasBeen", // New table for places the user has been to
+    joinColumn: {
+      name: "userId",
+      referencedColumnName: "id",
+    },
+    inverseJoinColumn: {
+      name: "placeId",
+      referencedColumnName: "id",
+    },
+  })
+  userHasBeen: Place[];
+
   @OneToMany(() => AddRequest, (addRequest) => addRequest.user)
   addRequests: AddRequest[];
 }

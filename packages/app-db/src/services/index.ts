@@ -6,3 +6,4 @@ export * from "./SavedPlaceService";
 export * from "./ImageService";
 export * from './AddRequestService'
 export * from './ProfilePictureService'
+export * from './HasBeenService'

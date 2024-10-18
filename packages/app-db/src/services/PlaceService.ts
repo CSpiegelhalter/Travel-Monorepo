@@ -97,15 +97,15 @@ export class PlaceService {
       )
       .getCount();
 
-      const places = entities.map((place, index) => {
-        // Extract and assign images, limiting to 3
-        place.images = raw
-          .filter((row) => row.place_id === place.id)
-          .map((row) => row.image_src)
-          .slice(0, 3);
+    const places = entities.map((place, index) => {
+      // Extract and assign images, limiting to 3
+      place.images = raw
+        .filter((row) => row.place_id === place.id)
+        .map((row) => row.image_src)
+        .slice(0, 3);
 
-        return place;
-      });
+      return place;
+    });
 
     const totalPages = Math.ceil(total / pageSize);
 
@@ -187,7 +187,9 @@ export class PlaceService {
       .leftJoinAndSelect("place.addedByUser", "addedByUser")
       .leftJoinAndSelect("place.categories", "categories")
       .leftJoin("place.savedByUsers", "savedByUsers")
+      .leftJoin("place.usersHaveBeen", "usersHaveBeen")
       .addSelect("COUNT(savedByUsers.id)", "savedCount")
+      .addSelect("COUNT(usersHaveBeen.id)", "usersHaveBeenCount")
       .addSelect(
         (subQuery) =>
           subQuery
@@ -214,6 +216,10 @@ export class PlaceService {
 
     // Safely assign the additional properties
     place["savedCount"] = parseInt(rawData.savedCount || "0", 10);
+    place["usersHaveBeenCount"] = parseInt(
+      rawData.usersHaveBeenCount || "0",
+      10
+    );
     place["images"] = rawData.images || [];
 
     return place;
@@ -258,6 +264,7 @@ export class PlaceService {
     addedCount: number;
     editedCount: number;
     savedCount: number;
+    usersHaveBeenCount: number;
   }> {
     const queryBuilder = this.repo
       .createQueryBuilder("place")
@@ -265,10 +272,12 @@ export class PlaceService {
         "COUNT(DISTINCT CASE WHEN addedByUser.id = :userId THEN place.id END) AS addedcount",
         "COUNT(DISTINCT CASE WHEN editedByUsers.id = :userId THEN place.id END) AS editedcount",
         "COUNT(DISTINCT CASE WHEN savedByUsers.id = :userId THEN place.id END) AS savedcount",
+        "COUNT(DISTINCT CASE WHEN usersHaveBeen.id = :userId THEN place.id END) AS usersHaveBeenCount",
       ])
       .leftJoin("place.addedByUser", "addedByUser")
       .leftJoin("place.editedByUsers", "editedByUsers")
       .leftJoin("place.savedByUsers", "savedByUsers")
+      .leftJoin("place.usersHaveBeen", "usersHaveBeen")
       .setParameter("userId", userId);
 
     console.log("Generated SQL Query:", queryBuilder.getSql());
@@ -278,7 +287,12 @@ export class PlaceService {
 
     if (!result) {
       console.error("No results found for userId:", userId);
-      return { addedCount: 0, editedCount: 0, savedCount: 0 };
+      return {
+        addedCount: 0,
+        editedCount: 0,
+        savedCount: 0,
+        usersHaveBeenCount: 0,
+      };
     }
 
     console.log("Raw Query Result:", result);
@@ -286,8 +300,9 @@ export class PlaceService {
     const addedCount = parseInt(result.addedcount, 10) || 0;
     const editedCount = parseInt(result.editedcount, 10) || 0;
     const savedCount = parseInt(result.savedcount, 10) || 0;
+    const usersHaveBeenCount = parseInt(result.usersHaveBeenCount, 10) || 0;
 
-    return { addedCount, editedCount, savedCount };
+    return { addedCount, editedCount, savedCount, usersHaveBeenCount };
   }
 
   public async getSavedPlacesByUser(userId: string, page = 1, pageSize = 16) {
@@ -420,22 +435,48 @@ export class PlaceService {
       totalPages,
     };
   }
+  public async getUserHasBeenPlaces(userId: string, page = 1, pageSize = 16) {
+    const { entities: places, raw } = await this.repo
+      .createQueryBuilder("place")
+      .leftJoin("place.usersHaveBeen", "usersHaveBeen")
+      .addSelect(
+        (subQuery) =>
+          subQuery
+            .select("ARRAY_AGG(image.src)", "images")
+            .from("image", "image")
+            .where("image.placeId = place.id")
+            .limit(3),
+        "place_images"
+      )
+      .where("usersHaveBeen.id = :userId", { userId })
+      .orderBy("place.id", "ASC")
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getRawAndEntities();
 
-  // public async getMany(userId?: string): Promise<Place[]> {
-  //   const query = this.repo
-  //     .createQueryBuilder("place")
-  //     .leftJoinAndSelect(
-  //       "SavedPlace", // The SavedPlace table
-  //       "savedPlace", // Alias for SavedPlace
-  //       "savedPlace.placeId = place.id AND savedPlace.userId = :userId", // Join condition
-  //       { userId } // Pass the userId as a parameter
-  //     )
-  //     .select([
-  //       "place", // Select all fields from the Place table
-  //       "CASE WHEN savedPlace.userId IS NOT NULL THEN true ELSE false END AS isSaved", // Add isSaved field
-  //     ])
-  //     .take(25);
+    const total = await this.repo
+      .createQueryBuilder("place")
+      .leftJoin("place.usersHaveBeen", "usersHaveBeen")
+      .where("usersHaveBeen.id = :userId", { userId })
+      .getCount();
 
-  //   return query.getRawMany();
-  // }
+    const totalPages = Math.ceil(total / pageSize);
+
+    // Manually add `images` as an array of strings to each `place`
+    const placesWithImages = places.map((place, index) => {
+      const rawPlace = raw[index];
+      return {
+        ...place,
+        images: rawPlace.place_images || [], // `place_images` should contain only `src` values as strings
+      };
+    });
+
+    return {
+      places: placesWithImages,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
+  }
 }

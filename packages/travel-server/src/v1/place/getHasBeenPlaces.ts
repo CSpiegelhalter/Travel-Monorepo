@@ -3,30 +3,38 @@ import { PlaceService } from "app-db/dist/services/PlaceService";
 import { FastifyRequest, FastifyReply } from "fastify";
 
 interface Query {
-  id: string; // The 'id' query parameter should be a string
   userId: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export default function (server: Server): Server {
   server.route({
     method: "GET",
-    url: "/v1/getPlaceById",
+    url: "/v1/getHasBeenPlaces",
     handler: async (
       req: FastifyRequest<{ Querystring: Query }>,
       res: FastifyReply
     ) => {
-      const { id, userId } = req.query;
+      const { userId, page, pageSize } = req.query;
       console.log("Here be the user id:");
       console.log(userId);
       const repositoryController = server.repositoryController;
-      const placeService = new PlaceService(repositoryController);
-      try {
-        const place = await placeService.getById(id);
 
-        if (place) {
-          return res.send(place);
+      console.log('HERE BE THE PAGE AND SIZE')
+      console.log(page);
+      console.log(typeof pageSize);
+      try {
+        const placeService = new PlaceService(repositoryController);
+        const places = await placeService.getUserHasBeenPlaces(
+          userId,
+          page ? page : 1,
+          pageSize ? pageSize : 16
+        );
+        if (places) {
+          return res.send(places);
         } else {
-          return res.status(404).send({ message: "Place not found" });
+          return res.status(404).send({ message: "No has been places found" });
         }
       } catch (e) {
         return res.status(500).send({ error: `An error occurred: ${e}` });
