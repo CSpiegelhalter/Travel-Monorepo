@@ -25,7 +25,7 @@ export class Categories1728055553743 implements MigrationInterface {
     );
 
     await queryRunner.query(
-      `INSERT INTO "category" (name) VALUES ('Attraction'), ('Food'), ('Nature'), ('Bar'), ('Shop')`
+      `INSERT INTO "category" (name) VALUES ('Attraction'), ('Food'), ('Nature'), ('Bar'), ('Shop'), ('Hotel')`
     );
   }
 

@@ -41,11 +41,25 @@ export class PlaceService {
     });
   }
 
-  public async getWithinRange(
-    longitude: number,
-    latitude: number,
-    rangeKm: number
-  ): Promise<Place[]> {
+  public async getWithinRange({
+    longitude,
+    latitude,
+    rangeKm = 100,
+    page = 1,
+    pageSize = 16,
+  }: {
+    longitude: number;
+    latitude: number;
+    rangeKm: number;
+    page: number;
+    pageSize: number;
+  }): Promise<{
+    places: Place[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
     const isValidLongitude = longitude >= -180 && longitude <= 180;
     const isValidLatitude = latitude >= -90 && latitude <= 90;
 
@@ -53,17 +67,55 @@ export class PlaceService {
       throw new BadRequestException("Invalid coordinates");
     }
 
-    return this.repo
+    const { entities, raw } = await this.repo
       .createQueryBuilder("place")
       .select()
-      .leftJoinAndSelect("place.editedByUsers", "editedByUsers")
-      .leftJoinAndSelect("place.addedByUser", "addedByUser")
-      .leftJoinAndSelect("place.categories", "categories")
+      .leftJoinAndSelect("place.images", "image", "image.placeId = place.id")
+      .addSelect(
+        (subQuery) =>
+          subQuery
+            .select("ARRAY_AGG(image.src)")
+            .from("image", "image")
+            .where("image.placeId = place.id")
+            .limit(3),
+        "place.images"
+      )
+      // .leftJoinAndSelect("place.categories", "categories")
       .where(
-        "ST_DWithin(place.coordinates, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :range)",
+        "ST_DWithin(place.location, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :range)",
         { lon: longitude, lat: latitude, range: rangeKm * 1000 }
       )
-      .getMany();
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getRawAndEntities();
+
+    const total = await this.repo
+      .createQueryBuilder("place")
+      .where(
+        "ST_DWithin(place.location, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :range)",
+        { lon: longitude, lat: latitude, range: rangeKm * 1000 }
+      )
+      .getCount();
+
+      const places = entities.map((place, index) => {
+        // Extract and assign images, limiting to 3
+        place.images = raw
+          .filter((row) => row.place_id === place.id)
+          .map((row) => row.image_src)
+          .slice(0, 3);
+
+        return place;
+      });
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    return {
+      places,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
   }
 
   public async getMany({

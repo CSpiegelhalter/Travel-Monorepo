@@ -10,7 +10,7 @@
     "migration:generate": "yarn typeorm migration:generate -d ./src/typeorm.config.ts src/migrations/$NAME",
     "migration:run": "yarn typeorm migration:run -d ./src/typeorm.config.ts",
     "migration:revert": "yarn typeorm migration:revert -d ./src/typeorm.config.ts",
-    "seed:run": "ts-node src/seed/seed.ts",
+    "seed:run": "ts-node src/seed/seedFile.ts",
     "test": "ts-node src/test.ts"
   },
   "dependencies": {
@@ -27,7 +27,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.7.1",
+    "@types/papaparse": "^5",
     "esbuild": "^0.24.0",
+    "papaparse": "^5.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   },

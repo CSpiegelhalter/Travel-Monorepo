@@ -5,3 +5,4 @@ export * from "./UserService";
 export * from "./SavedPlaceService";
 export * from "./ImageService";
 export * from './AddRequestService'
+export * from './ProfilePictureService'

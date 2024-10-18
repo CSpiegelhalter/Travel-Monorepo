@@ -6,9 +6,18 @@ import {
   Category,
   Image,
   AddRequest,
+  ProfilePicture,
 } from "./models"; // Adjust the path to your entities
 
-export const entities = [User, Place, EditRequest, Category, Image, AddRequest];
+export const entities = [
+  User,
+  Place,
+  EditRequest,
+  Category,
+  Image,
+  AddRequest,
+  ProfilePicture,
+];
 // Create and export a DataSource instance
 export const AppDataSource = new DataSource({
   type: "postgres",

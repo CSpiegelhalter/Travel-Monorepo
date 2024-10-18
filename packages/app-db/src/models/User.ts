@@ -5,9 +5,13 @@ import {
   ManyToMany,
   JoinTable,
   OneToMany,
+  OneToOne,
+  JoinColumn,
 } from "typeorm";
 import { Place } from "./Place";
 import { AddRequest } from "./AddRequest";
+import { Image } from "./Image";
+import { ProfilePicture } from "./ProfilePicture";
 
 @Entity()
 export class User {
@@ -23,8 +27,9 @@ export class User {
   @Column({ default: "user" })
   role: string; // 'user' or 'admin'
 
-  @Column({ nullable: true })
-  profilePicture: string;
+  @OneToOne(() => ProfilePicture, { nullable: true, cascade: true })
+  @JoinColumn()
+  profilePicture: ProfilePicture;
 
   @ManyToMany(() => Place, (place) => place.editedByUsers)
   editedPlaces: Place[];
