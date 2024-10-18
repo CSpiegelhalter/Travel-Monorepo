@@ -9,7 +9,7 @@ export class ProfilePictureService {
 
   constructor(private readonly repositoryController: RepositoryController) {
     this.repo =
-      this.repositoryController.getRepository<ProfilePicture>("Image");
+      this.repositoryController.getRepository<ProfilePicture>("ProfilePicture");
   }
 
   public async create({

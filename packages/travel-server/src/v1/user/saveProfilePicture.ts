@@ -27,13 +27,31 @@ export default function (server: Server): Server {
         return await res.send({ error: "User not found!" });
       }
 
+      // Unlink the old profile picture from the user
+      await userService.saveProfilePicture({
+        userId,
+        profilePicture: null, // Unlink the old profile picture first
+      });
+
+      // Now it's safe to delete the old profile picture
+      await profilePicService.delete({
+        user,
+      });
+
+      // Create the new profile picture
       const profilePic = await profilePicService.create({
         src: imageUrl,
         user,
       });
 
+      // Link the new profile picture to the user
+      await userService.saveProfilePicture({
+        userId,
+        profilePicture: profilePic,
+      });
+
       if (profilePic) {
-        return await res.send(profilePic);
+        return await res.send({ ...profilePic, status: 200 });
       }
 
       return await res.send({ error: "Failed to create profile picture..." });

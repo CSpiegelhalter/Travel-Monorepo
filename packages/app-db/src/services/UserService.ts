@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Repository } from "typeorm";
-import { Image, User } from "../models";
+import { Image, ProfilePicture, User } from "../models";
 import { RepositoryController } from "../contoller/RepositoryController";
 
 type UserModel = {
@@ -26,19 +26,18 @@ export class UserService {
     });
   }
 
-  // public async saveProfilePicture({
-  //   userId,
-  //   image,
-  // }: {
-  //   userId: string;
-  //   image: Image;
-  // }): Promise<User> {
-  //   return this.repo.save({
-  //     username,
-  //     email,
-  //     id,
-  //   });
-  // }
+  public async saveProfilePicture({
+    userId,
+    profilePicture,
+  }: {
+    userId: string;
+    profilePicture: ProfilePicture;
+  }): Promise<User> {
+    return this.repo.save({
+      profilePicture,
+      id: userId,
+    });
+  }
 
   public async getById(id: string): Promise<User> {
     return this.repo
