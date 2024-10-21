@@ -44,10 +44,7 @@ export class HasBeenService {
     return await this.userRepo.save(user); // Save the updated user entity
   }
 
-  public async hasUserBeen(
-    userId: string,
-    placeId: string
-  ): Promise<boolean> {
+  public async hasUserBeen(userId: string, placeId: string): Promise<boolean> {
     const hasBeenCount = await this.userRepo
       .createQueryBuilder("user")
       .innerJoin("user.userHasBeen", "place")

@@ -31,10 +31,14 @@ export class User {
   @JoinColumn()
   profilePicture: ProfilePicture;
 
-  @ManyToMany(() => Place, (place) => place.editedByUsers)
+  @ManyToMany(() => Place, (place) => place.editedByUsers, {
+    cascade: true,
+  })
   editedPlaces: Place[];
 
-  @ManyToMany(() => Place, (place) => place.savedByUsers)
+  @ManyToMany(() => Place, (place) => place.savedByUsers, {
+    cascade: true,
+  })
   @JoinTable({
     name: "SavedPlace",
     joinColumn: {
@@ -48,9 +52,11 @@ export class User {
   })
   savedPlaces: Place[];
 
-  @ManyToMany(() => Place, (place) => place.usersHaveBeen)
+  @ManyToMany(() => Place, (place) => place.usersHaveBeen, {
+    cascade: true,
+  })
   @JoinTable({
-    name: "UserHasBeen", // New table for places the user has been to
+    name: "UserHasBeen",
     joinColumn: {
       name: "userId",
       referencedColumnName: "id",
@@ -62,6 +68,8 @@ export class User {
   })
   userHasBeen: Place[];
 
-  @OneToMany(() => AddRequest, (addRequest) => addRequest.user)
+  @OneToMany(() => AddRequest, (addRequest) => addRequest.user, {
+    cascade: true,
+  })
   addRequests: AddRequest[];
 }

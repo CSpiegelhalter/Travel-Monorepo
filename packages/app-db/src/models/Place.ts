@@ -35,7 +35,7 @@ export class Place {
   @Column({ nullable: true })
   website: string;
 
-  @ManyToMany(() => Category, { cascade: true }) // Cascade allows new categories to be created automatically
+  @ManyToMany(() => Category, { cascade: true }) 
   @JoinTable()
   categories: Category[];
 

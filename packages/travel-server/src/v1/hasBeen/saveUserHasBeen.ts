@@ -24,7 +24,7 @@ export default function (server: Server): Server {
 
       const [place, user] = await Promise.all([
         placeService.getById(placeId),
-        userService.getUserSavedPlaces(userId),
+        userService.getUserHasBeenPlaces(userId),
       ]);
 
       if (!place) {

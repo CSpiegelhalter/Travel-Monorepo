@@ -3,6 +3,7 @@ import getMany from "./get-many";
 import getAddedPlaces from "./getAddedPlaces";
 import getById from "./getById";
 import getEditedPlaces from "./getEditedPlaces";
+import getHasBeenPlaces from "./getHasBeenPlaces";
 import getSavedPlaces from "./getSavedPlaces";
 import getWithinRange from "./getWithinRange";
 import uploadImage from "./uploadImage";
@@ -14,5 +15,6 @@ export default function (server: Server): void {
   getEditedPlaces(server);
   getAddedPlaces(server);
   getSavedPlaces(server);
-  getWithinRange(server)
+  getWithinRange(server);
+  getHasBeenPlaces(server);
 }
