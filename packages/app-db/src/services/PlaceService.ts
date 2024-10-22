@@ -48,6 +48,75 @@ export class PlaceService {
       addedByUser: addedByUser ?? null,
     });
   }
+  public async getWithinBounds({
+    neLongitude,
+    neLatitude,
+    swLongitude,
+    swLatitude,
+    page = 1,
+    pageSize = 16,
+    category,
+  }: {
+    neLongitude: number; // Northeast longitude
+    neLatitude: number; // Northeast latitude
+    swLongitude: number; // Southwest longitude
+    swLatitude: number; // Southwest latitude
+    page: number;
+    pageSize: number;
+    category?: Category;
+  }): Promise<{
+    places: any[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
+    const query = this.repo
+      .createQueryBuilder("place")
+      .select()
+      .innerJoinAndSelect("place.images", "imagesRefs");
+    console.log("HERE DUEDEDED");
+    console.log(category);
+    if (category) {
+      query.innerJoin(
+        "place.categories",
+        "category",
+        "category.id = :categoryId",
+        { categoryId: category.id }
+      );
+    }
+    query.where(
+      "place.location && ST_MakeEnvelope(:swLng, :swLat, :neLng, :neLat, 4326)",
+      {
+        swLng: swLongitude,
+        swLat: swLatitude,
+        neLng: neLongitude,
+        neLat: neLatitude,
+      }
+    );
+
+    query
+      .orderBy("place.id", "ASC")
+      .skip((page - 1) * pageSize)
+      .take(pageSize);
+
+    const placesRes = await query.getManyAndCount();
+    const [placesData, total] = placesRes;
+
+    const places = placesData.map((place) => {
+      return this.formatImagesForPlace(place);
+    });
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    return {
+      places,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
+  }
 
   public async getWithinRange({
     longitude,
@@ -83,7 +152,7 @@ export class PlaceService {
       .innerJoinAndSelect("place.images", "imagesRefs");
 
     if (category) {
-      console.log(category.id)
+      console.log(category.id);
       query.innerJoin(
         "place.categories",
         "category",

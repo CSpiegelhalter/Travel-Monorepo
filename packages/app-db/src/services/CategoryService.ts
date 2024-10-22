@@ -18,6 +18,9 @@ export class CategoryService {
   }
 
   public async getByName(name: string): Promise<Category> {
+     if (!name) {
+       return null; // Return null or handle as needed if name is undefined or empty
+     }
     return this.repo.findOne({
       where: { name },
     });

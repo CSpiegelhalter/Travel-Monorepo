@@ -10,7 +10,7 @@
     "migration:generate": "yarn typeorm migration:generate -d ./src/typeorm.config.ts src/migrations/$NAME",
     "migration:run": "yarn typeorm migration:run -d ./src/typeorm.config.ts",
     "migration:revert": "yarn typeorm migration:revert -d ./src/typeorm.config.ts",
-    "seed:run": "ts-node src/seed/seedFile.ts",
+    "seed:run": "ts-node src/seed/seedJson.ts",
     "test": "ts-node src/test.ts"
   },
   "dependencies": {

@@ -132,3 +132,4 @@ dist
 
 #seed files
 *.tsv
+with_s3_image.json
